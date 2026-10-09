@@ -98,6 +98,20 @@ def create_app(data_dir: str | None = None) -> Flask:
                                         "Use the local studio for bigger files."))
         return "File too large", 413
 
+    @app.errorhandler(404)
+    def not_found(e):
+        # chunk uploads speak JSON: a JSON 404 here means a stale deployment
+        if request.path.endswith("/clips/chunk"):
+            return jsonify({"error": "stale deployment: chunk route missing (HTTP 404). "
+                                     "Redeploy the latest main."}), 404
+        return render_template("404.html"), 404
+
+    @app.errorhandler(500)
+    def crashed(e):
+        if request.path.endswith("/clips/chunk"):
+            return jsonify({"error": f"server error during upload chunk: {e}"}), 500
+        return render_template("500.html"), 500
+
     # ---------- public demo routes (also served on Vercel) ----------
     @app.get("/")
     def landing():

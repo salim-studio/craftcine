@@ -154,22 +154,25 @@ async function uploadVideo(form) {
       fd.append('upload_id', uid); fd.append('index', i); fd.append('total', total);
       fd.append('filename', f.name);
       fd.append('chunk', f.slice(i * CH, (i + 1) * CH), 'chunk');
-      var r, j;
+      var r, txt;
       try {
         r = await fetch(url, {method: 'POST', body: fd});
-        j = await r.json();
+        txt = await r.text();
       } catch (e) {
         alert('Upload failed (network): ' + (e.message || e));
         btn.disabled = false; btn.textContent = '⬆️ Import video';
         return false;
       }
+      var j = null;
+      try { j = JSON.parse(txt); } catch (e) { j = null; }
       if (j && j.restart) { scattered = true; break; }
-      if (!r.ok || (j && j.error)) {
-        alert('Upload failed: ' + ((j && j.error) || ('HTTP ' + r.status)));
+      if (!r.ok || !j || j.error) {
+        var detail = (j && j.error) || ('HTTP ' + r.status + ': ' + (txt || '').slice(0, 140));
+        alert('Upload failed: ' + detail);
         btn.disabled = false; btn.textContent = '⬆️ Import video';
         return false;
       }
-      if (j && j.done) { window.location.href = j.redirect; return false; }
+      if (j.done) { window.location.href = j.redirect; return false; }
     }
     if (!scattered) break;
     msg.textContent = 'connection scattered — retrying…';
