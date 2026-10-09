@@ -1,0 +1,21 @@
+{
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "theme": "ink_press",
+  "seed": 7,
+  "bgm": "",
+  "sfx": [],
+  "shots": [
+    {"shot": "iris-open", "duration": 2.2, "title": "CraftCine", "subtitle": "Your product, on cinema 🎬"},
+    {"shot": "spotlight-hero", "duration": 4.0, "title": "Hero Shot", "subtitle": "Your product under the spotlight"},
+    {"shot": "page-pan", "duration": 3.5, "title": "Real Interface", "subtitle": "No redesign — live 2.5D capture"},
+    {"shot": "deck-deal-flyin", "duration": 3.0, "title": "3 Features", "subtitle": "Dealt fast like playing cards"},
+    {"shot": "zoom-push", "duration": 3.2, "title": "Zoom In", "subtitle": "Push on what matters most"},
+    {"shot": "digit-roll", "duration": 2.5, "title": "+128%", "subtitle": "Numbers that move", "value": 128},
+    {"shot": "row-embed", "duration": 3.0, "title": "Dense UI", "subtitle": "Rows that blend seamlessly"},
+    {"shot": "ticker-wall", "duration": 3.0, "title": "Live Activity", "subtitle": "A wall that never sleeps"},
+    {"shot": "logo-hold", "duration": 2.5, "title": "CRAFTCINE", "subtitle": "Cut. Craft. Cinema."},
+    {"shot": "cta-pulse", "duration": 2.5, "title": "Get Started", "subtitle": "One pulsing button — no clutter"}
+  ]
+}

@@ -1,0 +1,18 @@
+[project]
+name = "craftcine"
+version = "1.1.0"
+description = "CraftCine — cinematic product videos in pure Python (Cut. Craft. Cinema.)"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{name = "salim-slimani"}]
+dependencies = ["pillow>=10", "numpy", "imageio", "imageio-ffmpeg"]
+
+[project.scripts]
+craftcine = "craftcine.__main__:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["craftcine*"]

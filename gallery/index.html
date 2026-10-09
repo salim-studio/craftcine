@@ -1,0 +1,168 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>CraftCine Gallery — 24 shots</title><style>
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0B0B10;color:#eee;margin:0}
+header{padding:36px 20px;text-align:center;background:linear-gradient(135deg,#E8A923,#C084FC)}
+header h1{margin:8px 0 4px;color:#14100B;font-size:34px;letter-spacing:1px}
+header p{color:#3a2c1c;margin:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;padding:22px;max-width:1280px;margin:0 auto}
+.card{background:#17141F;border:1px solid #2c2838;border-radius:14px;padding:14px;transition:transform .15s}
+.card:hover{transform:translateY(-3px);border-color:#C084FC}
+.card h3{margin:0 0 6px;color:#E8A923;font-size:16px;font-family:Consolas,monospace}
+.badge{display:inline-block;background:#2c2838;border-radius:20px;padding:2px 10px;font-size:12px;margin:2px;color:#cfc8e0}
+.demo{height:120px;border-radius:10px;margin:10px 0;position:relative;overflow:hidden}
+.card p{font-size:13px;color:#a49db8;line-height:1.5}
+footer{text-align:center;padding:24px;color:#6f6a80;font-size:13px}
+
+@keyframes deal{0%{transform:translateX(120px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes floaty{0%,100%{transform:translateY(-6px)}50%{transform:translateY(6px)}}
+@keyframes flashy{0%,100%{opacity:1}50%{opacity:.2}}
+</style></head>
+<body><header><h1>🎬 CraftCine Gallery</h1>
+<p>24 motion recipes · theme <b>ink_press</b> · copy a shot name into your storyboard</p></header>
+<div class="grid"><div class="card"><h3>caption-pop</h3>
+<span class="badge">title</span><span class="badge">⚡2</span>
+<span class="badge">2.2s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Caption pops under the card. One message per shot.</p></div><div class="card"><h3>cta-pulse</h3>
+<span class="badge">cta</span><span class="badge">⚡3</span>
+<span class="badge">2.5s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>CTA button pulses once. Final conversion shot.</p></div><div class="card"><h3>deck-deal-flyin</h3>
+<span class="badge">feature</span><span class="badge">⚡4</span>
+<span class="badge">3.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:deal .8s ease both"></div></div>
+<p>Cards fly in like a dealt deck. Feature batch intro.</p></div><div class="card"><h3>digit-roll</h3>
+<span class="badge">data</span><span class="badge">⚡3</span>
+<span class="badge">2.5s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Number rolls up to a target. Stats / metrics.</p></div><div class="card"><h3>fade-in</h3>
+<span class="badge">opener</span><span class="badge">⚡1</span>
+<span class="badge">2.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Quiet fade + slow push. Use for the brand open.</p></div><div class="card"><h3>flash-cut</h3>
+<span class="badge">transition</span><span class="badge">⚡5</span>
+<span class="badge">0.6s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:flashy 1s linear infinite"></div></div>
+<p>2-frame white flash cut. Beat cuts only (<= 3 per film).</p></div><div class="card"><h3>glitch-cut</h3>
+<span class="badge">transition</span><span class="badge">⚡5</span>
+<span class="badge">0.8s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:flashy 1s linear infinite"></div></div>
+<p>RGB-split hard cut. Tech / edgy beats only.</p></div><div class="card"><h3>grid-stagger</h3>
+<span class="badge">feature</span><span class="badge">⚡3</span>
+<span class="badge">2.8s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:deal .8s ease both"></div></div>
+<p>2x2 grid staggers in. Integrations / logo wall.</p></div><div class="card"><h3>iris-open</h3>
+<span class="badge">opener</span><span class="badge">⚡2</span>
+<span class="badge">2.2s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Circular iris reveals the hero. Cinematic open.</p></div><div class="card"><h3>kenburns</h3>
+<span class="badge">hero</span><span class="badge">⚡2</span>
+<span class="badge">4.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:floaty 2s ease-in-out infinite"></div></div>
+<p>Slow pan + zoom. A breathing moment.</p></div><div class="card"><h3>logo-hold</h3>
+<span class="badge">title</span><span class="badge">⚡1</span>
+<span class="badge">2.5s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Logo locks and holds >= 1s. Mandatory end breather.</p></div><div class="card"><h3>orbit-tilt</h3>
+<span class="badge">hero</span><span class="badge">⚡4</span>
+<span class="badge">3.5s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:floaty 2s ease-in-out infinite"></div></div>
+<p>Slight 2.5D orbit around a close-up. Premium feel.</p></div><div class="card"><h3>page-pan</h3>
+<span class="badge">camera</span><span class="badge">⚡2</span>
+<span class="badge">3.5s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Slow pan across a full-page capture texture.</p></div><div class="card"><h3>page-zoom</h3>
+<span class="badge">camera</span><span class="badge">⚡3</span>
+<span class="badge">3.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Zoom from full page to one element. Real-UI proof.</p></div><div class="card"><h3>parallax-float</h3>
+<span class="badge">hero</span><span class="badge">⚡2</span>
+<span class="badge">3.5s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:floaty 2s ease-in-out infinite"></div></div>
+<p>Two depth layers drift in opposite directions. Dreamy hold.</p></div><div class="card"><h3>row-embed</h3>
+<span class="badge">feature</span><span class="badge">⚡3</span>
+<span class="badge">3.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:deal .8s ease both"></div></div>
+<p>Rows slide in and embed into a panel. Dense UI showcase.</p></div><div class="card"><h3>slide-left</h3>
+<span class="badge">transition</span><span class="badge">⚡3</span>
+<span class="badge">1.2s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:flashy 1s linear infinite"></div></div>
+<p>Card slides left, next enters. Workhorse transition.</p></div><div class="card"><h3>slide-up</h3>
+<span class="badge">transition</span><span class="badge">⚡3</span>
+<span class="badge">1.2s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:flashy 1s linear infinite"></div></div>
+<p>Rise transition. Section change.</p></div><div class="card"><h3>split-reveal</h3>
+<span class="badge">feature</span><span class="badge">⚡3</span>
+<span class="badge">2.5s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:deal .8s ease both"></div></div>
+<p>Wipe split reveals before/after. Comparison.</p></div><div class="card"><h3>spotlight-hero</h3>
+<span class="badge">hero</span><span class="badge">⚡3</span>
+<span class="badge">4.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:floaty 2s ease-in-out infinite"></div></div>
+<p>Single hero card: gather -> push -> float -> settle. The money shot.</p></div><div class="card"><h3>stack-cards</h3>
+<span class="badge">feature</span><span class="badge">⚡3</span>
+<span class="badge">3.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:deal .8s ease both"></div></div>
+<p>Cards stack with overshoot. Steps / process.</p></div><div class="card"><h3>ticker-wall</h3>
+<span class="badge">data</span><span class="badge">⚡4</span>
+<span class="badge">3.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Infinite vertical ticker. Log / activity feed.</p></div><div class="card"><h3>typewriter</h3>
+<span class="badge">opener</span><span class="badge">⚡2</span>
+<span class="badge">3.0s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:pop .7s ease both"></div></div>
+<p>Char-by-char title reveal. Manifesto / statement.</p></div><div class="card"><h3>zoom-push</h3>
+<span class="badge">hero</span><span class="badge">⚡3</span>
+<span class="badge">3.2s</span>
+<div class="demo" style="background:#241C12;border-top:4px solid #E8A923">
+<div style="width:55%;height:56%;margin:18px auto;background:#14100B;border:2px solid #E8A923;
+border-radius:10px;animation:floaty 2s ease-in-out infinite"></div></div>
+<p>Camera pushes into the product card. Feature reveal.</p></div></div>
+<footer>© 2026 salim-slimani · CraftCine — Cut. Craft. Cinema.</footer></body></html>

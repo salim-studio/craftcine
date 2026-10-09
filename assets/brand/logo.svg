@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="CraftCine logo">
+  <defs>
+    <linearGradient id="cc-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E8A923"/>
+      <stop offset="1" stop-color="#C084FC"/>
+    </linearGradient>
+    <linearGradient id="cc-play" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F5EBD7"/>
+    </linearGradient>
+  </defs>
+  <!-- film-frame rounded square -->
+  <rect x="8" y="14" width="112" height="100" rx="22" fill="url(#cc-bg)"/>
+  <!-- sprocket holes, top + bottom -->
+  <g fill="#14100B" opacity="0.85">
+    <rect x="22" y="22" width="12" height="8" rx="2"/>
+    <rect x="42" y="22" width="12" height="8" rx="2"/>
+    <rect x="62" y="22" width="12" height="8" rx="2"/>
+    <rect x="82" y="22" width="12" height="8" rx="2"/>
+    <rect x="22" y="98" width="12" height="8" rx="2"/>
+    <rect x="42" y="98" width="12" height="8" rx="2"/>
+    <rect x="62" y="98" width="12" height="8" rx="2"/>
+    <rect x="82" y="98" width="12" height="8" rx="2"/>
+  </g>
+  <!-- aperture / play mark -->
+  <circle cx="64" cy="64" r="26" fill="#14100B" opacity="0.88"/>
+  <path d="M58 50.5 L80 64 L58 77.5 Z" fill="url(#cc-play)" stroke-linejoin="round"/>
+</svg>

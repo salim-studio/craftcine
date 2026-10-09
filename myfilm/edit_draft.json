@@ -1,0 +1,204 @@
+{
+  "app": "craftcine",
+  "fps": 30,
+  "theme": "ink_press",
+  "total_sec": 29.4,
+  "video_track": [
+    {
+      "id": 0,
+      "shot": "iris-open",
+      "start": 0.0,
+      "duration": 2.2,
+      "start_frame": 0,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 1,
+      "shot": "spotlight-hero",
+      "start": 2.2,
+      "duration": 4.0,
+      "start_frame": 66,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 2,
+      "shot": "page-pan",
+      "start": 6.2,
+      "duration": 3.5,
+      "start_frame": 186,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 3,
+      "shot": "deck-deal-flyin",
+      "start": 9.7,
+      "duration": 3.0,
+      "start_frame": 291,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 4,
+      "shot": "zoom-push",
+      "start": 12.7,
+      "duration": 3.2,
+      "start_frame": 381,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 5,
+      "shot": "digit-roll",
+      "start": 15.9,
+      "duration": 2.5,
+      "start_frame": 476,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 6,
+      "shot": "row-embed",
+      "start": 18.4,
+      "duration": 3.0,
+      "start_frame": 552,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 7,
+      "shot": "ticker-wall",
+      "start": 21.4,
+      "duration": 3.0,
+      "start_frame": 642,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 8,
+      "shot": "logo-hold",
+      "start": 24.4,
+      "duration": 2.5,
+      "start_frame": 732,
+      "speed": 1.0,
+      "reorderable": true
+    },
+    {
+      "id": 9,
+      "shot": "cta-pulse",
+      "start": 26.9,
+      "duration": 2.5,
+      "start_frame": 807,
+      "speed": 1.0,
+      "reorderable": true
+    }
+  ],
+  "caption_track": [
+    {
+      "clip_id": 0,
+      "text": "CraftCine",
+      "sub": "Your product, on cinema 🎬",
+      "start": 0.0,
+      "duration": 2.2,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 1,
+      "text": "Hero Shot",
+      "sub": "Your product under the spotlight",
+      "start": 2.2,
+      "duration": 4.0,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 2,
+      "text": "Real Interface",
+      "sub": "No redesign — live 2.5D capture",
+      "start": 6.2,
+      "duration": 3.5,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 3,
+      "text": "3 Features",
+      "sub": "Dealt fast like playing cards",
+      "start": 9.7,
+      "duration": 3.0,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 4,
+      "text": "Zoom In",
+      "sub": "Push on what matters most",
+      "start": 12.7,
+      "duration": 3.2,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 5,
+      "text": "+128%",
+      "sub": "Numbers that move",
+      "start": 15.9,
+      "duration": 2.5,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 6,
+      "text": "Dense UI",
+      "sub": "Rows that blend seamlessly",
+      "start": 18.4,
+      "duration": 3.0,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 7,
+      "text": "Live Activity",
+      "sub": "A wall that never sleeps",
+      "start": 21.4,
+      "duration": 3.0,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 8,
+      "text": "CRAFTCINE",
+      "sub": "Cut. Craft. Cinema.",
+      "start": 24.4,
+      "duration": 2.5,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    },
+    {
+      "clip_id": 9,
+      "text": "Get Started",
+      "sub": "One pulsing button — no clutter",
+      "start": 26.9,
+      "duration": 2.5,
+      "font_size": 52,
+      "color": "#F5EBD7",
+      "editable": true
+    }
+  ],
+  "audio_tracks": {
+    "bgm": "",
+    "sfx": []
+  }
+}
