@@ -6,3 +6,6 @@ myfilm/out/
 *.mp4
 .DS_Store
 .vercel
+.cache/
+projects/
+.stills/

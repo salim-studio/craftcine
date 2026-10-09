@@ -1,8 +1,9 @@
 """CraftCine compositor — Pillow 2.5D renderer. Fast, dependency-light, deterministic."""
 from __future__ import annotations
 import math
+import os
 from functools import lru_cache
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 
 from . import easing as E
 from . import themes as T
@@ -71,7 +72,8 @@ def _text_center(base: Image.Image, text: str, cx: float, y: float, size: int, c
 
 def render_frame(shot: str, t: float, W: int, H: int, theme_name: str = "ink_press",
                  title: str = "", subtitle: str = "", seed: int = 7,
-                 value: int = 0) -> Image.Image:
+                 value: int = 0, image: str | None = None,
+                 values: list | None = None) -> Image.Image:
     """Render one RGBA frame. t in 0..1, deterministic from (shot, seed)."""
     t = max(0.0, min(1.0, t))
     theme = T.get(theme_name)
@@ -82,6 +84,18 @@ def render_frame(shot: str, t: float, W: int, H: int, theme_name: str = "ink_pre
 
     cw, ch = int(W * 0.62), int(H * 0.46)
     card = _card_base(cw, ch, theme)
+
+    # optional product image: cover-fit into the card body (chrome stays on top)
+    if image and os.path.exists(str(image)):
+        try:
+            iw, ih = cw - 24, int(ch * 0.58)
+            shot_img = ImageOps.fit(Image.open(str(image)).convert("RGB"),
+                                    (iw, ih), Image.LANCZOS).convert("RGBA")
+            mask = Image.new("L", (iw, ih), 0)
+            ImageDraw.Draw(mask).rounded_rectangle([0, 0, iw - 1, ih - 1], radius=14, fill=255)
+            card.paste(shot_img, (12, ch - ih - 12), mask)
+        except Exception:
+            pass
 
     # per-shot motion -------------------------------------------------------
     if shot == "fade-in":
@@ -198,6 +212,36 @@ def render_frame(shot: str, t: float, W: int, H: int, theme_name: str = "ink_pre
             md.ellipse([cx - r, cy - r, cx + r, cy + r], fill=255)
             dark = Image.new("RGBA", (W, H), (0, 0, 0, 220))
             base.paste(dark, (0, 0), Image.eval(mask, lambda v: 255 - v))
+    elif shot == "rise-in":
+        e = E.ease_out_back(t)
+        k = min(1.0, e)
+        _paste_center(base, card, cx, cy + (1 - k) * 120, 0.92 + 0.08 * k, 255)
+    elif shot == "zoom-out":
+        e = E.ease_in_out_cubic(t)
+        _paste_center(base, card, cx, cy, 1.6 - 0.6 * e, 255)
+    elif shot == "slide-right":
+        e = E.ease_in_out_cubic(t)
+        _paste_center(base, card, cx - W * (0.6 - e * 0.6), cy, 1.0, 255)
+    elif shot == "card-flip":
+        e = E.ease_out_back(t)
+        sx = max(0.05, math.sin(min(1.0, e) * math.pi / 2))
+        flipped = card.resize((max(1, int(cw * sx)), ch), Image.BILINEAR)
+        _paste_center(base, flipped, cx, cy, 1.0, int(255 * min(1.0, t * 3)))
+    elif shot == "stat-trio":
+        vals = list(values) if values else [42, 68, 95]
+        mw = cw // 3 - 10
+        for i in range(3):
+            lt = E.lagged(t, i, 3)
+            mini = _card_base(mw, ch, theme)
+            x = cx + (i - 1) * (mw + 16)
+            _paste_center(base, mini, x, cy + (1 - lt) * 50, 0.9 + 0.1 * lt, int(255 * lt))
+            if lt > 0.6:
+                _text_center(base, str(int(vals[i % len(vals)] * E.ease_out_expo(t))),
+                             x, cy + 6, int(H * 0.06), acc)
+    elif shot == "quote-card":
+        e = E.ease_out_cubic(t)
+        _paste_center(base, card, cx, cy, 0.94 + 0.06 * e, int(255 * min(1.0, t * 2)))
+        _text_center(base, "\u201c", cx, cy - ch / 2 - 14, int(H * 0.13), acc)
     else:
         _paste_center(base, card, cx, cy, 1.0, 255)
 

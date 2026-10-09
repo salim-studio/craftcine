@@ -1,11 +1,11 @@
 [project]
 name = "craftcine"
-version = "1.1.0"
+version = "2.0.0"
 description = "CraftCine — cinematic product videos in pure Python (Cut. Craft. Cinema.)"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{name = "salim-slimani"}]
-dependencies = ["pillow>=10", "numpy", "imageio", "imageio-ffmpeg"]
+dependencies = ["pillow>=10", "numpy", "imageio", "imageio-ffmpeg", "flask>=3"]
 
 [project.scripts]
 craftcine = "craftcine.__main__:main"
@@ -16,3 +16,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["craftcine*"]
+
+[tool.setuptools.package-data]
+craftcine = ["web/templates/*.html", "web/static/*"]

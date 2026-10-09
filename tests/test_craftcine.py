@@ -17,7 +17,7 @@ def test_mulberry_deterministic():
 
 
 def test_shots_valid():
-    assert len(shots.SHOTS) == 24
+    assert len(shots.SHOTS) == 30
     for name in shots.SHOTS:
         assert shots.get(name)["name"] == name
 

@@ -2,3 +2,4 @@ pillow>=10
 numpy
 imageio
 imageio-ffmpeg
+flask>=3

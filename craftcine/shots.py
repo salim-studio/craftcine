@@ -1,8 +1,6 @@
-"""CraftCine shot library — 24 curated motion recipes for product promos.
+"""CraftCine shot library — 30 curated motion recipes for product promos.
 
-Each entry maps 1:1 to a compositor routine in compositor.py (same function
-name as the shot key). Keep the library small on purpose: 24 grammars cover
-roughly 90% of promo needs, so choosing stays fast and rendering stays fast.
+Each entry maps 1:1 to a compositor routine in compositor.py.
 """
 from __future__ import annotations
 
@@ -86,6 +84,25 @@ SHOTS = {
     "glitch-cut": {"cat": "transition", "energy": 5, "dur": 0.8, "ease": "linear",
                    "desc": "RGB-split hard cut. Tech / edgy beats only.",
                    "params": {"slices": 6}},
+    # ---- second-wave additions ----
+    "rise-in": {"cat": "title", "energy": 2, "dur": 2.4, "ease": "back",
+                "desc": "Card rises with overshoot. Statement / chapter card.",
+                "params": {"rise_px": 120}},
+    "zoom-out": {"cat": "hero", "energy": 3, "dur": 3.2, "ease": "inout",
+                 "desc": "Close-up pulls back to wide. Context reveal.",
+                 "params": {"zoom": 1.6}},
+    "slide-right": {"cat": "transition", "energy": 3, "dur": 1.2, "ease": "inout",
+                    "desc": "Card slides right, next enters. Mirror of slide-left.",
+                    "params": {}},
+    "card-flip": {"cat": "feature", "energy": 4, "dur": 2.2, "ease": "back",
+                  "desc": "Card flips in on its vertical axis. Surprise reveal.",
+                  "params": {}},
+    "stat-trio": {"cat": "data", "energy": 3, "dur": 3.0, "ease": "out",
+                  "desc": "Three stat cards stagger in with rolling numbers. KPI wall.",
+                  "params": {"values": [42, 68, 95]}},
+    "quote-card": {"cat": "title", "energy": 2, "dur": 3.0, "ease": "out",
+                   "desc": "Centered testimonial card. Title is the quote, subtitle the author.",
+                   "params": {}},
 }
 
 CATEGORIES = sorted({v["cat"] for v in SHOTS.values()})

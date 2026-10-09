@@ -1,13 +1,14 @@
 """CraftCine CLI — single entry point. Pure Python, no browser, no heavy deps.
 
   python -m craftcine init myfilm          # new project from the template
-  python -m craftcine shots               # list the 24 shot recipes
+  python -m craftcine shots               # list the 30 shot recipes
   python -m craftcine render film/storyboard.json [--preview] [--jobs 8]
   python -m craftcine still film/storyboard.json --frame 45
   python -m craftcine gallery             # static HTML gallery
   python -m craftcine draft film/storyboard.json   # editable timeline JSON
   python -m craftcine workbench --dir film --port 5198
-  python -m craftcine theme --set midnight --file film/storyboard.json
+  python -m craftcine studio [--port 5198]   # full web studio (editor + jobs)
+  python -m craftcine subs film/storyboard.json  # subtitles (SRT)
 """
 from __future__ import annotations
 import argparse
@@ -51,15 +52,24 @@ def cmd_shots(args):
 
 
 def cmd_render(args):
+    from . import renderer as _R
     sb = TL.load(args.storyboard)
     if args.beat:
         sb = TL.snap_to_beats(sb, args.beat)
         print(f"Beat sync: cuts snapped to {args.beat} BPM")
-    out = args.out or os.path.join(os.path.dirname(os.path.abspath(args.storyboard)), "out",
+    base = os.path.dirname(os.path.abspath(args.storyboard))
+    out = args.out or os.path.join(base, "out",
                                    "preview.mp4" if args.preview else "promo.mp4")
-    mode = "PREVIEW 640x360@15fps" if args.preview else f"FINAL {sb['width']}x{sb['height']}@{sb['fps']}fps"
-    print(f"{mode} — theme={sb['theme']}")
-    path = R.render(sb, out, preview=args.preview, jobs=args.jobs)
+    if args.preview or args.fresh:
+        mode = "PREVIEW 640x360@15fps" if args.preview else "FULL (cache bypassed)"
+        print(f"{mode} — theme={sb['theme']}")
+        path = R.render(sb, out, preview=args.preview, jobs=args.jobs, assets_dir=base)
+    else:
+        print(f"INCREMENTAL {sb['width']}x{sb['height']}@{sb['fps']}fps — theme={sb['theme']}")
+        info = _R.render_incremental(sb, out, os.path.join(base, ".cache"),
+                                     assets_dir=base, jobs=args.jobs)
+        print(f"segments={info['segments']} rendered={info['rendered']} cached={info['cached']}")
+        path = info["output"]
     print(f"Done: {path} ({os.path.getsize(path)//1024} KB)")
 
 
@@ -99,6 +109,30 @@ def cmd_workbench(args):
     ST.serve_workbench(args.port, args.dir)
 
 
+def cmd_subs(args):
+    from . import subs as SUBS
+    sb = TL.load(args.storyboard)
+    out = args.out or os.path.join(os.path.dirname(os.path.abspath(args.storyboard)),
+                                   "out", "promo.srt")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(SUBS.to_srt(sb))
+    print(f"Subtitles: {out}")
+
+
+def cmd_studio(args):
+    from .server import create_app
+    import webbrowser
+    app = create_app(args.dir if args.dir != "." else None)
+    url = f"http://localhost:{args.port}/studio"
+    print(f"CraftCine studio: {url}")
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
+    app.run(host="127.0.0.1", port=args.port, threaded=True)
+
+
 def build_parser():
     p = argparse.ArgumentParser(prog="craftcine", description="CraftCine — cinematic product videos in pure Python")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -108,8 +142,9 @@ def build_parser():
     a = sub.add_parser("shots", help="list shot recipes")
     a.add_argument("--cat"); a.add_argument("--energy", type=int)
     a.set_defaults(fn=cmd_shots)
-    a = sub.add_parser("render", help="render a storyboard to mp4")
+    a = sub.add_parser("render", help="render a storyboard to mp4 (incremental cache)")
     a.add_argument("storyboard"); a.add_argument("--out"); a.add_argument("--preview", action="store_true")
+    a.add_argument("--fresh", action="store_true", help="bypass the segment cache")
     a.add_argument("--jobs", type=int, default=0); a.add_argument("--beat", type=float, default=0)
     a.set_defaults(fn=cmd_render)
     a = sub.add_parser("still", help="dump one frame for QA review")
@@ -127,6 +162,12 @@ def build_parser():
     a = sub.add_parser("workbench", help="browser editor for the delivered film")
     a.add_argument("--dir", default="."); a.add_argument("--port", type=int, default=5198)
     a.set_defaults(fn=cmd_workbench)
+    a = sub.add_parser("studio", help="full web studio (projects + editor + render jobs)")
+    a.add_argument("--dir", default="."); a.add_argument("--port", type=int, default=5198)
+    a.set_defaults(fn=cmd_studio)
+    a = sub.add_parser("subs", help="export subtitles (SRT) from a storyboard")
+    a.add_argument("storyboard"); a.add_argument("--out", default="")
+    a.set_defaults(fn=cmd_subs)
     return p
 
 

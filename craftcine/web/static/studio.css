@@ -1,0 +1,36 @@
+:root { --amber: #E8A923; --violet: #C084FC; --bg: #0B0B10; --panel: #17141F;
+  --line: #2c2838; --txt: #eee; --mut: #a49db8; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--txt); margin: 0; }
+.topbar { display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 20px; background: linear-gradient(135deg, var(--amber), var(--violet)); }
+.topbar .brand { color: #14100B; font-weight: 800; font-size: 20px; text-decoration: none; letter-spacing: 1px; }
+.topbar nav a { color: #14100B; margin-left: 16px; font-weight: 600; text-decoration: none; }
+main { min-height: 70vh; }
+footer { text-align: center; padding: 22px; color: #6f6a80; font-size: 13px; }
+.hero { text-align: center; padding: 60px 20px; }
+.hero h1 { font-size: 44px; letter-spacing: 3px; margin: 10px 0; }
+.mono { font-family: Consolas, monospace; }
+code { background: var(--panel); padding: 2px 8px; border-radius: 6px; color: var(--amber); }
+.wrap { max-width: 980px; margin: 0 auto; padding: 20px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 12px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.btn { display: inline-block; background: var(--amber); color: #14100B; border: none; border-radius: 9px;
+  padding: 10px 20px; font-weight: 700; text-decoration: none; cursor: pointer; }
+.btn.ghost { background: transparent; border: 1px solid var(--amber); color: var(--amber); }
+.btn.danger { background: transparent; border: 1px solid #e35d5d; color: #e35d5d; }
+.btn.small { padding: 6px 12px; font-size: 13px; }
+input, select, textarea { background: #0e0c14; color: var(--txt); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px; margin: 4px; font-size: 14px; }
+textarea { width: 96%; font-family: Consolas, monospace; font-size: 12px; }
+.inline { display: inline-block; }
+.muted { color: var(--mut); }
+.err { color: #ff8f8f; }
+.bar { background: #0e0c14; border-radius: 8px; height: 12px; margin: 8px 0; overflow: hidden; }
+.bar > div { background: linear-gradient(90deg, var(--amber), var(--violet)); height: 100%; transition: width .4s; }
+.shot { display: flex; gap: 14px; align-items: flex-start; }
+.shot img { width: 240px; border-radius: 8px; border: 1px solid var(--line); }
+.shot form.inline { margin-right: 2px; }
+video { width: 100%; border-radius: 10px; background: #000; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+h2, h3 { color: var(--amber); }
+a { color: var(--violet); }

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Studio — CraftCine{% endblock %}
+{% block content %}
+<section class="wrap">
+  <h2>Projects</h2>
+  <form class="card inline" method="post" action="{{ url_for('new_project') }}">
+    <input name="title" placeholder="New film title…" required maxlength="60">
+    <button class="btn small" type="submit">+ New film</button>
+  </form>
+  <div class="grid">
+  {% for p in projects %}
+    <div class="card">
+      <h3><a href="{{ url_for('project', pid=p.id) }}">{{ p.title }}</a></h3>
+      <p class="muted">{{ p.shots }} shots · {{ "%.1f"|format(p.total_sec) }}s · {{ p.theme }}</p>
+      <p>
+        <a class="btn small" href="{{ url_for('project', pid=p.id) }}">Open</a>
+        <a class="btn small ghost" href="{{ url_for('download', pid=p.id) }}">MP4</a>
+      </p>
+    </div>
+  {% else %}
+    <p class="muted">No projects yet — create your first film above.</p>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

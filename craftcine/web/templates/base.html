@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}CraftCine{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='studio.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="{{ url_for('landing') }}">🎬 CraftCine</a>
+  <nav>
+    <a href="{{ url_for('dashboard') }}">Studio</a>
+    <a href="{{ url_for('gallery') }}">Gallery</a>
+    <a href="/api/shots">API</a>
+  </nav>
+</header>
+<main>{% block content %}{% endblock %}</main>
+<footer>{{ copyright }}</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

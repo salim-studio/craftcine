@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} — CraftCine Studio{% endblock %}
+{% block content %}
+<section class="wrap">
+  <p><a href="{{ url_for('dashboard') }}">← Projects</a></p>
+  <h2>{{ meta.title }}</h2>
+  <p class="muted">{{ sb.shots|length }} shots · {{ "%.1f"|format(meta.total_sec) }}s · {{ sb.width }}×{{ sb.height }}@{{ sb.fps }}</p>
+
+  <div class="toolbar card">
+    <form class="inline" method="post" action="{{ url_for('set_theme', pid=meta.id) }}">
+      <label>Theme
+        <select name="theme">
+        {% for t in themes %}
+          <option value="{{ t }}" {% if t == sb.theme %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+        </select>
+      </label>
+      <button class="btn small" type="submit">Apply</button>
+    </form>
+    <form class="inline" method="post" action="{{ url_for('start_render', pid=meta.id) }}">
+      <button class="btn small" type="submit">🎬 Render film</button>
+      <label class="muted"><input type="checkbox" name="preview" value="1"> fast preview</label>
+    </form>
+    <p class="inline">
+      <a class="btn small ghost" href="{{ url_for('download', pid=meta.id) }}">MP4</a>
+      <a class="btn small ghost" href="{{ url_for('subs', pid=meta.id) }}">SRT</a>
+      <a class="btn small ghost" href="{{ url_for('draft', pid=meta.id) }}">Draft JSON</a>
+    </p>
+  </div>
+
+  {% if job %}
+  <div class="card" id="jobbox" data-jid="{{ job.id }}">
+    <b>Render:</b> <span id="jobstatus">{{ job.status }}</span>
+    <div class="bar"><div id="jobbar" style="width:0%"></div></div>
+    <p class="muted" id="jobdetail"></p>
+    {% if job.status == "done" %}
+    <video controls src="{{ url_for('download', pid=meta.id) }}"></video>
+    {% endif %}
+    {% if job.status == "error" %}<p class="err">{{ job.error }}</p>{% endif %}
+  </div>
+  {% endif %}
+
+  <h3>Shots</h3>
+  {% for s in sb.shots %}
+  <div class="card shot">
+    <img loading="lazy" src="{{ url_for('still', pid=meta.id, i=loop.index0) }}" alt="shot {{ loop.index }} preview">
+    <div>
+      <p><code>{{ s.shot }}</code> · {{ s.duration }}s</p>
+      <p><b>{{ s.title }}</b><br><span class="muted">{{ s.subtitle }}</span></p>
+      <p>
+        <form class="inline" method="post" action="{{ url_for('move_shot', pid=meta.id, i=loop.index0) }}">
+          <input type="hidden" name="dir" value="up"><button class="btn small ghost" type="submit">↑</button>
+        </form>
+        <form class="inline" method="post" action="{{ url_for('move_shot', pid=meta.id, i=loop.index0) }}">
+          <input type="hidden" name="dir" value="down"><button class="btn small ghost" type="submit">↓</button>
+        </form>
+        <form class="inline" method="post" action="{{ url_for('delete_shot', pid=meta.id, i=loop.index0) }}"
+              onsubmit="return confirm('Delete this shot?')">
+          <button class="btn small danger" type="submit">Delete</button>
+        </form>
+      </p>
+    </div>
+  </div>
+  {% endfor %}
+
+  <h3>Add shot</h3>
+  <form class="card" method="post" action="{{ url_for('add_shot', pid=meta.id) }}">
+    <label>Shot
+      <select name="shot">
+      {% for cat, rows in grouped.items() %}
+        <optgroup label="{{ cat }}">
+        {% for r in rows %}
+          <option value="{{ r.name }}">{{ r.name }} — {{ r.desc }}</option>
+        {% endfor %}
+        </optgroup>
+      {% endfor %}
+      </select>
+    </label>
+    <input name="title" placeholder="Title" maxlength="80">
+    <input name="subtitle" placeholder="Subtitle" maxlength="120">
+    <button class="btn small" type="submit">Add</button>
+  </form>
+
+  <h3>Storyboard JSON</h3>
+  <div class="card">
+    <textarea id="sb" rows="14">{{ sb | tojson(indent=2) }}</textarea><br>
+    <button class="btn small" onclick="saveBoard()">💾 Save storyboard</button>
+    <span id="savelog" class="muted"></span>
+  </div>
+
+  <form method="post" action="{{ url_for('delete_project', pid=meta.id) }}"
+        onsubmit="return confirm('Delete the whole project?')">
+    <button class="btn small danger" type="submit">Delete project</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+function saveBoard() {
+  fetch("{{ url_for('save_board', pid=meta.id) }}", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: document.getElementById("sb").value
+  }).then(r => r.json()).then(m => {
+    document.getElementById("savelog").textContent = "saved ✓ " + m.shots + " shots";
+    location.reload();
+  }).catch(e => { document.getElementById("savelog").textContent = "error: " + e; });
+}
+(function poll() {
+  const box = document.getElementById("jobbox");
+  if (!box) return;
+  fetch("/studio/api/jobs/" + box.dataset.jid).then(r => r.json()).then(j => {
+    document.getElementById("jobstatus").textContent = j.status;
+    const pct = j.total ? Math.round(100 * j.done / j.total) : 0;
+    document.getElementById("jobbar").style.width = pct + "%";
+    document.getElementById("jobdetail").textContent =
+      j.done + "/" + j.total + " frames · cached " + j.cached + " · rendered " + j.rendered;
+    if (j.status === "running" || j.status === "queued") setTimeout(poll, 1500);
+    else if (j.status === "done") location.reload();
+  });
+})();
+</script>
+{% endblock %}

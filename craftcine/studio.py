@@ -65,6 +65,11 @@ def export_edit_draft(storyboard_path: str, out_json: str) -> str:
     """
     with open(storyboard_path, encoding="utf-8") as f:
         sb = json.load(f)
+    return export_edit_draft_to(sb, out_json)
+
+
+def export_edit_draft_to(sb: dict, out_json: str) -> str:
+    """Same as export_edit_draft but takes an already-loaded storyboard."""
     fps = sb.get("fps", 30)
     t = 0.0
     clips, captions = [], []

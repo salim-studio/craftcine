@@ -7,7 +7,7 @@
 <p align="center"><b>Cut. Craft. Cinema.</b> — cinematic product videos rendered in pure Python.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.1.0-amber" alt="version">
+  <img src="https://img.shields.io/badge/version-2.0.0-amber" alt="version">
   <img src="https://img.shields.io/badge/python-%3E%3D3.9-blue" alt="python">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license">
   <img src="https://img.shields.io/badge/renderer-Pillow%20%2B%20ffmpeg-lightgrey" alt="renderer">
@@ -16,10 +16,10 @@
 ## Why CraftCine
 
 - **Zero heavy toolchain** — no browser, no Node, no UI framework. `pip install` and render.
-- **24 curated shot recipes** — a tight motion vocabulary covering ~90% of promo needs.
+- **30 curated shot recipes** — a tight motion vocabulary covering ~90% of promo needs.
 - **9 one-click themes** — switch the whole film's look with one flag.
 - **Parallel renderer** — frames render across all CPU cores; instant `--preview` mode for iteration.
-- **One CLI** — `init / shots / render / still / gallery / draft / theme / workbench`.
+- **One CLI** — `init / shots / render / still / subs / gallery / draft / theme / studio / workbench`.
 - **Deterministic** — the same `(storyboard, seed)` always produces the same mp4.
 
 ## Install (2 minutes)
@@ -35,12 +35,25 @@ pip install -e .   # or: pip install git+https://github.com/salim-studio/craftci
 python -m craftcine init myfilm --title "My Product"
 python -m craftcine render myfilm/storyboard.json --preview   # instant preview
 python -m craftcine render myfilm/storyboard.json             # final film
-python -m craftcine gallery --out gallery/index.html          # browse all 24 shots
+python -m craftcine gallery --out gallery/index.html          # browse all 30 shots
 python -m craftcine draft myfilm/storyboard.json              # editable timeline JSON
 python -m craftcine workbench --dir myfilm                    # browser editor
 ```
 
-## Shots (24)
+## Studio (web app)
+
+```bash
+python -m craftcine studio --port 5198   # opens http://localhost:5198/studio
+```
+
+- **Dashboard** — create and manage film projects (file-based, no database).
+- **Visual editor** — reorder shots, edit copy, switch themes, per-shot previews.
+- **Background renders** — progress bar, incremental cache (only edited shots re-render).
+- **One-click exports** — MP4, SRT subtitles, editable timeline JSON.
+- **Product images** — put `"image": "shot.png"` on any shot to composite a real
+  screenshot into the card.
+
+## Shots (30)
 
 `fade-in · iris-open · typewriter · spotlight-hero · zoom-push · orbit-tilt ·`
 `kenburns · parallax-float · deck-deal-flyin · row-embed · stack-cards ·`
@@ -99,7 +112,10 @@ Live routes: `/` · `/gallery` · `/api/shots` · `/api/themes` ·
 
 ```
 craftcine/
-├── craftcine/        easing | shots | themes | compositor | timeline | renderer | studio | __main__ (CLI)
+├── craftcine/        easing | shots (30) | themes | compositor | timeline
+│                     renderer (incremental cache) | studio | subs | projects | jobs
+│                     server (Flask studio) | __main__ (CLI)
+├── craftcine/web/    studio templates + static CSS
 ├── assets/brand/     logo + visual identity
 ├── template/         ready-to-render 10-shot promo (~30s)
 ├── references/       production method (pipeline + visual QA)

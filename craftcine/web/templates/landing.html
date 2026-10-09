@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}CraftCine — Cut. Craft. Cinema.{% endblock %}
+{% block content %}
+<section class="hero">
+  <img src="{{ url_for('logo') }}" width="96" alt="CraftCine logo">
+  <h1>CRAFTCINE</h1>
+  <p><b>Cut. Craft. Cinema.</b> — cinematic product videos in pure Python.</p>
+  <p>
+    <a class="btn" href="{{ url_for('dashboard') }}">Open Studio</a>
+    <a class="btn ghost" href="{{ url_for('gallery') }}">Browse shots</a>
+    <a class="btn ghost" href="/api/render-demo">Watch 5s demo</a>
+  </p>
+  <p class="mono">Full films render locally: <code>python -m craftcine render myfilm/storyboard.json</code></p>
+</section>
+{% endblock %}
