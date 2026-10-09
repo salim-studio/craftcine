@@ -74,6 +74,22 @@ def create_app(data_dir: str | None = None) -> Flask:
         return send_file(os.path.join(P.REPO_ROOT, "template", "promo.json"),
                          mimetype="application/json")
 
+    @app.get("/api/version")
+    def api_version():
+        """Deployment diagnostic: confirms which code is actually live."""
+        import subprocess
+        from . import __version__
+        sha = os.environ.get("VERCEL_GIT_COMMIT_SHA", "")
+        if not sha:
+            try:
+                sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                                     capture_output=True, text=True, cwd=P.REPO_ROOT,
+                                     timeout=5).stdout.strip()
+            except Exception:
+                sha = "unknown"
+        return jsonify({"app": "craftcine", "version": __version__,
+                        "commit": sha, "shots": len(S.SHOTS)})
+
     @app.get("/api/render-demo")
     def api_render_demo():
         from . import timeline as TL

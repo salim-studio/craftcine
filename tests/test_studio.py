@@ -98,6 +98,8 @@ def test_studio_flow(tmp_path, monkeypatch):
     assert c.get("/").status_code == 200
     assert c.get("/api/shots").status_code == 200
     assert len(c.get("/api/shots").get_json()) == 30
+    v = c.get("/api/version").get_json()
+    assert v["app"] == "craftcine" and v["shots"] == 30
     assert c.get("/gallery").status_code == 200
     assert c.get("/studio").status_code == 200
     # create + edit
