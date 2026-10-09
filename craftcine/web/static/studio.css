@@ -21,6 +21,8 @@ code { background: var(--panel); padding: 2px 8px; border-radius: 6px; color: va
 .btn.small { padding: 6px 12px; font-size: 13px; }
 input, select, textarea { background: #0e0c14; color: var(--txt); border: 1px solid var(--line);
   border-radius: 8px; padding: 8px; margin: 4px; font-size: 14px; }
+.badge { display: inline-block; background: #2c2838; border-radius: 20px; padding: 2px 10px;
+  font-size: 12px; margin: 2px; color: #cfc8e0; }
 textarea { width: 96%; font-family: Consolas, monospace; font-size: 12px; }
 .inline { display: inline-block; }
 .muted { color: var(--mut); }

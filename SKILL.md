@@ -13,6 +13,8 @@ description: Create cinematic product videos in pure Python (30 shot recipes + 9
 3. Edit `storyboard.json`: one shot = one message (`title`/`subtitle`), logo hold ≥ 1s, full flash ≤ 3 per film.
 4. `render --preview` for instant iteration → `still` for frame QA → `render` for the final.
 5. After delivery: `workbench --dir <project>`, and `draft` when external editing is requested.
+6. Real footage: import a video in the studio (or set `"clip"` on a shot) to play
+   the motion over it; short clips loop seamlessly.
 
 ## Hard rules
 

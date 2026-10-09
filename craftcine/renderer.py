@@ -21,9 +21,15 @@ from . import compositor as C
 
 
 def _render_one(args) -> tuple[int, object]:
-    frame, shot_name, t, W, H, theme, title, subtitle, seed, value, image, values = args
+    frame, shot_name, t, W, H, theme, title, subtitle, seed, value, image, values, clip_path, clip_t = args
+    clip_frame = None
+    if clip_path:
+        try:
+            clip_frame = C.get_clip_frame(clip_path, clip_t)
+        except Exception:
+            clip_frame = None
     img = C.render_frame(shot_name, t, W, H, theme, title, subtitle, seed, value,
-                         image=image, values=values)
+                         image=image, values=values, clip=clip_frame)
     return frame, np.asarray(img)
 
 
@@ -31,9 +37,27 @@ def _resolve_image(path: str, assets_dir: str) -> str:
     if not path:
         return ""
     if os.path.isabs(path) and os.path.exists(path):
-        return path
+        return os.path.normpath(path)
     cand = os.path.join(assets_dir, path) if assets_dir else path
-    return cand if os.path.exists(cand) else ""
+    return os.path.normpath(cand) if os.path.exists(cand) else ""
+
+
+def _clip_time(shot: dict, lt: float, seg_dur: float, assets_dir: str) -> tuple[str, float]:
+    """(clip_path, clip_time) for a shot — loops shorter clips seamlessly."""
+    cp = (shot.get("clip") or "").strip()
+    if not cp:
+        return "", 0.0
+    path = _resolve_image(cp, assets_dir)
+    if not path:
+        return "", 0.0
+    try:
+        _, _, dur = C.clip_info(path)
+    except Exception:
+        return "", 0.0
+    if dur <= 0:
+        return "", 0.0
+    off = float(shot.get("clip_offset", 0) or 0)
+    return path, (off + lt * seg_dur) % dur
 
 
 def _tasks(sb: dict, W: int, H: int, fps: int, assets_dir: str = "") -> list:
@@ -49,11 +73,12 @@ def _tasks(sb: dict, W: int, H: int, fps: int, assets_dir: str = "") -> list:
         for (a, b, s) in bounds:
             if t_sec < b or s is bounds[-1][2]:
                 lt = max(0.0, min(1.0, (t_sec - a) / (b - a)))
+                clip_path, clip_t = _clip_time(s, lt, (b - a), assets_dir)
                 tasks.append((f, s["shot"], lt, W, H, sb.get("theme", "ink_press"),
                               s.get("title", ""), s.get("subtitle", ""),
                               sb.get("seed", 7), s.get("value", 0),
                               _resolve_image(s.get("image", ""), assets_dir),
-                              s.get("values") or None))
+                              s.get("values") or None, clip_path, clip_t))
                 break
     return tasks
 
@@ -142,6 +167,11 @@ def shot_hash(shot: dict, W: int, H: int, fps: int, theme: str, seed: int,
     if img:
         st = os.stat(img)
         payload["image"] = [img, st.st_mtime_ns, st.st_size]
+    cp = _resolve_image((shot.get("clip") or "").strip(), assets_dir)
+    if cp:
+        st = os.stat(cp)
+        payload["clip"] = [cp, st.st_mtime_ns, st.st_size,
+                           float(shot.get("clip_offset", 0) or 0)]
     return hashlib.sha1(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:12]
 
 
@@ -183,11 +213,13 @@ def render_incremental(sb: dict, out_mp4: str, cache_dir: str, assets_dir: str =
             tasks = []
             for k, f in enumerate(range(f0, f1)):
                 lt = (f / fps - a0) / max(1e-6, (b0 - a0))
-                tasks.append((k, s["shot"], max(0.0, min(1.0, lt)), W, H, theme,
+                lt = max(0.0, min(1.0, lt))
+                clip_path, clip_t = _clip_time(s, lt, (b0 - a0), assets_dir)
+                tasks.append((k, s["shot"], lt, W, H, theme,
                               s.get("title", ""), s.get("subtitle", ""),
                               seed, s.get("value", 0),
                               _resolve_image(s.get("image", ""), assets_dir),
-                              s.get("values") or None))
+                              s.get("values") or None, clip_path, clip_t))
             frames = _run_tasks(tasks, jobs, progress,
                                 on_progress and (lambda d, t, _b=done_base: on_progress(_b + d, total_frames)))
             _write_mp4(frames, path, fps)
@@ -234,10 +266,17 @@ def still(sb: dict, frame: int, out_png: str, W: int = 0, H: int = 0,
           assets_dir: str = "") -> str:
     """QA still — dump one frame for review."""
     i, t, s = TL.frame_to_shot(sb, frame)
+    clip_path, clip_t = _clip_time(s, t, float(s.get("duration", 2.5)), assets_dir)
+    clip_frame = None
+    if clip_path:
+        try:
+            clip_frame = C.get_clip_frame(clip_path, clip_t)
+        except Exception:
+            clip_frame = None
     img = C.render_frame(s["shot"], t, W or sb["width"], H or sb["height"],
                          sb.get("theme", "ink_press"), s.get("title", ""),
                          s.get("subtitle", ""), sb.get("seed", 7), s.get("value", 0),
                          image=_resolve_image(s.get("image", ""), assets_dir),
-                         values=s.get("values") or None)
+                         values=s.get("values") or None, clip=clip_frame)
     img.save(out_png)
     return out_png

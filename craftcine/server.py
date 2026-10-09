@@ -20,6 +20,19 @@ from . import themes as T
 
 WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
 COPYRIGHT = "© 2026 salim-slimani · CraftCine"
+CLIP_EXTS = {".mp4", ".webm", ".mov", ".m4v"}
+MAX_UPLOAD_MB = 25 if os.environ.get("VERCEL") == "1" else 100
+
+
+def _clips(root: str, pid: str) -> list[dict]:
+    adir = os.path.join(root, pid, "assets")
+    out = []
+    if os.path.isdir(adir):
+        for fn in sorted(os.listdir(adir)):
+            p = os.path.join(adir, fn)
+            if os.path.isfile(p):
+                out.append({"name": fn, "mb": round(os.path.getsize(p) / 1048576, 2)})
+    return out
 
 
 def create_app(data_dir: str | None = None) -> Flask:
@@ -27,6 +40,7 @@ def create_app(data_dir: str | None = None) -> Flask:
     app = Flask(__name__, template_folder=os.path.join(WEB_DIR, "templates"),
                 static_folder=os.path.join(WEB_DIR, "static"))
     app.config["DATA_DIR"] = root
+    app.config["MAX_CONTENT_LENGTH"] = (MAX_UPLOAD_MB + 10) * 1024 * 1024
 
     # ---------- public demo routes (also served on Vercel) ----------
     @app.get("/")
@@ -103,7 +117,8 @@ def create_app(data_dir: str | None = None) -> Flask:
             grouped.setdefault(row["cat"], []).append(row)
         job = JOBS.latest_for(pid)
         return render_template("project.html", meta=meta, sb=sb, grouped=grouped,
-                               themes=T.names(), job=job, copyright=COPYRIGHT)
+                               themes=T.names(), job=job, clips=_clips(root, pid),
+                               copyright=COPYRIGHT)
 
     @app.post("/studio/p/<pid>/delete")
     def delete_project(pid: str):
@@ -143,6 +158,66 @@ def create_app(data_dir: str | None = None) -> Flask:
         j = i + (-1 if request.form.get("dir") == "up" else 1)
         if 0 <= i < len(sb["shots"]) and 0 <= j < len(sb["shots"]):
             sb["shots"][i], sb["shots"][j] = sb["shots"][j], sb["shots"][i]
+            P.save(root, pid, sb)
+            _drop_stills(root, pid)
+        return redirect(url_for("project", pid=pid))
+
+    @app.post("/studio/p/<pid>/clips/upload")
+    def upload_clip(pid: str):
+        _get(pid)
+        f = request.files.get("clip")
+        if not f or not f.filename:
+            return redirect(url_for("project", pid=pid, err="No file selected."))
+        from werkzeug.utils import secure_filename
+        fn = secure_filename(f.filename)
+        ext = os.path.splitext(fn)[1].lower()
+        if ext not in CLIP_EXTS:
+            return redirect(url_for("project", pid=pid,
+                                    err=f"Only video files ({', '.join(sorted(CLIP_EXTS))})."))
+        adir = os.path.join(root, pid, "assets")
+        os.makedirs(adir, exist_ok=True)
+        dest = os.path.join(adir, fn)
+        f.save(dest)
+        if os.path.getsize(dest) > MAX_UPLOAD_MB * 1048576:
+            os.remove(dest)
+            return redirect(url_for("project", pid=pid,
+                                    err=f"File too large (max {MAX_UPLOAD_MB} MB)."))
+        try:
+            from . import compositor as C
+            C.clip_info(dest)
+        except Exception:
+            os.remove(dest)
+            return redirect(url_for("project", pid=pid, err="Could not read that video."))
+        return redirect(url_for("project", pid=pid))
+
+    @app.post("/studio/p/<pid>/clips/delete")
+    def delete_clip(pid: str):
+        meta, sb = _get(pid)
+        fn = os.path.basename(request.form.get("name", ""))
+        target = os.path.join(root, pid, "assets", fn)
+        if os.path.isfile(target) and fn:
+            try:
+                from . import compositor as C
+                C.release_clip(target)
+            except Exception:
+                pass
+            os.remove(target)
+            for s in sb["shots"]:
+                if s.get("clip") == f"assets/{fn}":
+                    s.pop("clip", None)
+            P.save(root, pid, sb)
+            _drop_stills(root, pid)
+        return redirect(url_for("project", pid=pid))
+
+    @app.post("/studio/p/<pid>/shots/<int:i>/clip")
+    def attach_clip(pid: str, i: int):
+        meta, sb = _get(pid)
+        if 0 <= i < len(sb["shots"]):
+            fn = os.path.basename(request.form.get("clip", ""))
+            if fn and os.path.isfile(os.path.join(root, pid, "assets", fn)):
+                sb["shots"][i]["clip"] = f"assets/{fn}"
+            else:
+                sb["shots"][i].pop("clip", None)
             P.save(root, pid, sb)
             _drop_stills(root, pid)
         return redirect(url_for("project", pid=pid))

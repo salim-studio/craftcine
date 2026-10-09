@@ -58,7 +58,6 @@ def _paste_center(base: Image.Image, layer: Image.Image, cx: float, cy: float, s
         layer.putalpha(a)
     base.alpha_composite(layer, (int(cx - nw / 2), int(cy - nh / 2)))
 
-
 def _text_center(base: Image.Image, text: str, cx: float, y: float, size: int, color: tuple, stroke: int = 0):
     if not text:
         return
@@ -70,11 +69,102 @@ def _text_center(base: Image.Image, text: str, cx: float, y: float, size: int, c
            stroke_width=stroke, stroke_fill=(0, 0, 0, 180) if stroke else None)
 
 
+_READERS: dict[str, object] = {}
+_CLIP_INFO: dict[str, tuple] = {}
+
+
+def _close_clip_readers():
+    for r in list(_READERS.values()):
+        try:
+            r.close()
+        except Exception:
+            pass
+
+
+def release_clip(path: str) -> None:
+    """Close + forget a cached clip reader (needed before deleting on Windows)."""
+    path = os.path.normpath(path)
+    r = _READERS.pop(path, None)
+    if r is not None:
+        try:
+            r.close()
+        except Exception:
+            pass
+    _CLIP_INFO.pop(path, None)
+
+
+import atexit as _atexit
+_atexit.register(_close_clip_readers)
+
+
+def clip_info(path: str) -> tuple[float, int, float]:
+    """(fps, nframes, duration_sec) for a video file. Cached per file version."""
+    import imageio.v2 as imageio
+    path = os.path.normpath(path)
+    st = os.stat(path)
+    ver = (st.st_mtime_ns, st.st_size)
+    hit = _CLIP_INFO.get(path)
+    if hit and hit[0] == ver:
+        return hit[1]
+    r = imageio.get_reader(path)
+    try:
+        meta = r.get_meta_data() or {}
+        fps = float(meta.get("fps") or 25.0)
+        dur = meta.get("duration")
+        n = meta.get("nframes")
+        if dur is None:
+            if n in (None, float("inf")):
+                try:
+                    n = r.count_frames()
+                except Exception:
+                    n = 0
+            n = int(n or 0) or int(fps * 5)
+            dur = n / fps
+        else:
+            dur = float(dur)
+            n = int(n) if isinstance(n, (int, float)) and n not in (float("inf"),) else max(1, int(dur * fps))
+    finally:
+        try:
+            r.close()
+        except Exception:
+            pass
+    info = (fps, n, dur)
+    _CLIP_INFO[path] = (ver, info)
+    return info
+
+
+def get_clip_frame(path: str, t: float):
+    """One RGB frame from a video file at time t (loops). Numpy array."""
+    import imageio.v2 as imageio
+    path = os.path.normpath(path)
+    fps, n, dur = clip_info(path)
+    if dur <= 0 or n <= 0:
+        raise ValueError(f"unreadable clip: {path}")
+    idx = int((t % dur) * fps) % n
+    r = _READERS.get(path)
+    if r is None:
+        r = imageio.get_reader(path)
+        _READERS[path] = r
+    try:
+        return r.get_data(idx)
+    except Exception:
+        try:
+            r.close()
+        except Exception:
+            pass
+        r = imageio.get_reader(path)
+        _READERS[path] = r
+        return r.get_data(idx)
+
+
 def render_frame(shot: str, t: float, W: int, H: int, theme_name: str = "ink_press",
                  title: str = "", subtitle: str = "", seed: int = 7,
                  value: int = 0, image: str | None = None,
-                 values: list | None = None) -> Image.Image:
-    """Render one RGBA frame. t in 0..1, deterministic from (shot, seed)."""
+                 values: list | None = None, clip=None) -> Image.Image:
+    """Render one RGBA frame. t in 0..1, deterministic from (shot, seed).
+
+    `image` is a still path, `clip` a video frame (numpy array). Clip wins.
+    """
     t = max(0.0, min(1.0, t))
     theme = T.get(theme_name)
     bg, surf, txt, acc, mut = _hex(theme["bg"]), _hex(theme["surface"]), _hex(theme["text"]), _hex(theme["accent"]), _hex(theme["muted"])
@@ -85,12 +175,24 @@ def render_frame(shot: str, t: float, W: int, H: int, theme_name: str = "ink_pre
     cw, ch = int(W * 0.62), int(H * 0.46)
     card = _card_base(cw, ch, theme)
 
-    # optional product image: cover-fit into the card body (chrome stays on top)
-    if image and os.path.exists(str(image)):
+    # optional product visual: video clip frame wins, still image otherwise.
+    # Either is cover-fit into the card body (window chrome stays on top).
+    tex = None
+    if clip is not None:
+        try:
+            import numpy as _np
+            tex = Image.fromarray(_np.asarray(clip)).convert("RGB")
+        except Exception:
+            tex = None
+    if tex is None and image and os.path.exists(str(image)):
+        try:
+            tex = Image.open(str(image)).convert("RGB")
+        except Exception:
+            tex = None
+    if tex is not None:
         try:
             iw, ih = cw - 24, int(ch * 0.58)
-            shot_img = ImageOps.fit(Image.open(str(image)).convert("RGB"),
-                                    (iw, ih), Image.LANCZOS).convert("RGBA")
+            shot_img = ImageOps.fit(tex, (iw, ih), Image.LANCZOS).convert("RGBA")
             mask = Image.new("L", (iw, ih), 0)
             ImageDraw.Draw(mask).rounded_rectangle([0, 0, iw - 1, ih - 1], radius=14, fill=255)
             card.paste(shot_img, (12, ch - ih - 12), mask)

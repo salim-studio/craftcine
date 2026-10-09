@@ -46,9 +46,18 @@
   <div class="card shot">
     <img loading="lazy" src="{{ url_for('still', pid=meta.id, i=loop.index0) }}" alt="shot {{ loop.index }} preview">
     <div>
-      <p><code>{{ s.shot }}</code> · {{ s.duration }}s</p>
+      <p><code>{{ s.shot }}</code> · {{ s.duration }}s
+        {% if s.clip %}<span class="badge">🎞️ {{ s.clip }}</span>{% endif %}</p>
       <p><b>{{ s.title }}</b><br><span class="muted">{{ s.subtitle }}</span></p>
       <p>
+        <form class="inline" method="post" action="{{ url_for('attach_clip', pid=meta.id, i=loop.index0) }}">
+          <select name="clip" onchange="this.form.submit()">
+            <option value="">— no video —</option>
+            {% for c in clips %}
+            <option value="{{ c.name }}" {% if s.clip == 'assets/' + c.name %}selected{% endif %}>🎞️ {{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
         <form class="inline" method="post" action="{{ url_for('move_shot', pid=meta.id, i=loop.index0) }}">
           <input type="hidden" name="dir" value="up"><button class="btn small ghost" type="submit">↑</button>
         </form>
@@ -63,6 +72,25 @@
     </div>
   </div>
   {% endfor %}
+
+  <h3>Media — import a video to apply shots to it</h3>
+  <div class="card">
+    <form class="inline" method="post" action="{{ url_for('upload_clip', pid=meta.id) }}" enctype="multipart/form-data">
+      <input type="file" name="clip" accept="video/mp4,video/webm,video/quicktime" required>
+      <button class="btn small" type="submit">⬆️ Import video</button>
+    </form>
+    {% for c in clips %}
+    <p class="inline"><span class="badge">🎞️ {{ c.name }} ({{ c.mb }} MB)</span>
+      <form class="inline" method="post" action="{{ url_for('delete_clip', pid=meta.id) }}"
+            onsubmit="return confirm('Delete this video?')">
+        <input type="hidden" name="name" value="{{ c.name }}">
+        <button class="btn small danger" type="submit">Delete</button>
+      </form>
+    </p>
+    {% else %}
+    <p class="muted">No videos yet. Import one, then attach it to any shot with the 🎞️ dropdown — the shot motion plays over your footage (short clips loop seamlessly).</p>
+    {% endfor %}
+  </div>
 
   <h3>Add shot</h3>
   <form class="card" method="post" action="{{ url_for('add_shot', pid=meta.id) }}">
@@ -80,6 +108,7 @@
     <input name="title" placeholder="Title" maxlength="80">
     <input name="subtitle" placeholder="Subtitle" maxlength="120">
     <button class="btn small" type="submit">Add</button>
+    <p class="muted">Tip: add first, then attach a video with the 🎞️ dropdown on the shot.</p>
   </form>
 
   <h3>Storyboard JSON</h3>
