@@ -3,6 +3,10 @@
 {% block content %}
 <section class="wrap">
   <h2>Projects</h2>
+  {% if request.args.get('err') %}<p class="err">{{ request.args.get('err') }}</p>{% endif %}
+  {% if temporary %}
+  <p class="muted">Hosted demo: projects are temporary and reset on redeploy — download your MP4/SRT to keep work. Run <code>python -m craftcine studio</code> locally for permanent projects.</p>
+  {% endif %}
   <form class="card inline" method="post" action="{{ url_for('new_project') }}">
     <input name="title" placeholder="New film title…" required maxlength="60">
     <button class="btn small" type="submit">+ New film</button>

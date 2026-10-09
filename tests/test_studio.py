@@ -133,8 +133,7 @@ def test_studio_flow(tmp_path, monkeypatch):
     assert c.get(f"/studio/p/{pid}/draft.json").status_code == 200
 
 
-def test_serverless_render_sync(tmp_path, monkeypatch):
-    monkeypatch.setenv("VERCEL", "1")
+def test_serverless_render_sync(tmp_path, monkeypatch):    monkeypatch.setenv("VERCEL", "1")
     from craftcine.server import create_app
     app = create_app(data_dir=str(tmp_path / "srv"))
     app.config["TESTING"] = True
@@ -151,3 +150,11 @@ def test_serverless_render_sync(tmp_path, monkeypatch):
     assert r.status_code in (302, 303)
     assert c.get(f"/studio/p/{pid}/download").status_code == 200
     assert c.get("/api/render-demo").status_code == 200
+
+
+def test_gone_project_redirects_with_explanation(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    r = c.get("/studio/p/old-link-after-redeploy")
+    assert r.status_code in (302, 303)
+    assert "err=" in r.headers["Location"]
+    assert b"hosted projects reset" in c.get(r.headers["Location"]).data

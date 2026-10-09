@@ -181,7 +181,7 @@ def create_app(data_dir: str | None = None) -> Flask:
     @app.get("/studio")
     def dashboard():
         return render_template("dashboard.html", projects=P.list_projects(root),
-                               copyright=COPYRIGHT)
+                               temporary=JOBS.is_serverless(), copyright=COPYRIGHT)
 
     @app.post("/studio/new")
     def new_project():
@@ -189,11 +189,22 @@ def create_app(data_dir: str | None = None) -> Flask:
                         request.form.get("theme", "ink_press"))
         return redirect(url_for("project", pid=meta["id"]))
 
+    class _ProjectGone(Exception):
+        pass
+
+    @app.errorhandler(_ProjectGone)
+    def project_gone(e):
+        return redirect(url_for("dashboard",
+                                err="That project is gone — hosted projects reset on redeploy. "
+                                    "Start a new film below; keep your MP4/SRT downloads."))
+
     def _get(pid: str):
         try:
             return P.load(root, pid)
         except (OSError, ValueError, KeyError):
-            abort(404)
+            # Hosted projects live in temporary storage: redeploys and cold
+            # starts wipe them, so old links die. Redirect with an explanation.
+            raise _ProjectGone(pid)
 
     @app.get("/studio/p/<pid>")
     def project(pid: str):
