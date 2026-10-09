@@ -88,6 +88,14 @@ def create_app(data_dir: str | None = None) -> Flask:
     app.config["DATA_DIR"] = root
     app.config["MAX_CONTENT_LENGTH"] = (MAX_UPLOAD_MB + 10) * 1024 * 1024
 
+    @app.after_request
+    def no_cache(resp):
+        # Studio pages must never run stale from cache: old page code posts
+        # uploads in ways the current backend no longer expects.
+        if request.path.startswith("/studio"):
+            resp.headers["Cache-Control"] = "no-store, max-age=0"
+        return resp
+
     @app.errorhandler(413)
     def too_large(e):
         import re as _re
