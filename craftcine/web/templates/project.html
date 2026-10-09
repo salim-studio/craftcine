@@ -75,9 +75,11 @@
 
   <h3>Media — import a video to apply shots to it</h3>
   <div class="card">
-    <form class="inline" method="post" action="{{ url_for('upload_clip', pid=meta.id) }}" enctype="multipart/form-data">
+    <form class="inline" method="post" action="{{ url_for('upload_clip', pid=meta.id) }}"
+          enctype="multipart/form-data" onsubmit="return checkUpload(this)">
       <input type="file" name="clip" accept="video/mp4,video/webm,video/quicktime" required>
-      <button class="btn small" type="submit">⬆️ Import video</button>
+      <button class="btn small" type="submit" id="upbtn">⬆️ Import video</button>
+      <span class="muted">max {{ max_mb }} MB here — bigger files need the local studio</span>
     </form>
     {% for c in clips %}
     <p class="inline"><span class="badge">🎞️ {{ c.name }} ({{ c.mb }} MB)</span>
@@ -126,6 +128,18 @@
 {% endblock %}
 {% block scripts %}
 <script>
+function checkUpload(form) {
+  var f = form.querySelector('input[type=file]').files[0];
+  if (!f) return false;
+  var maxB = {{ max_mb }} * 1048576;
+  if (f.size > maxB) {
+    alert('This video is ' + (f.size / 1048576).toFixed(1) + ' MB — the limit here is {{ max_mb }} MB.\n\nRun the studio locally (python -m craftcine studio) for bigger files.');
+    return false;
+  }
+  var b = document.getElementById('upbtn');
+  b.disabled = true; b.textContent = '⏳ Uploading… do not close';
+  return true;
+}
 function saveBoard() {
   fetch("{{ url_for('save_board', pid=meta.id) }}", {
     method: "POST", headers: {"Content-Type": "application/json"},

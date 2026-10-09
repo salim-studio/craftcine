@@ -24,6 +24,10 @@ def clip_file(tmp_path):
 def test_clip_info_and_loop(clip_file):
     fps, n, dur = C.clip_info(clip_file)
     assert (fps, n, dur) == (10.0, 20, 2.0)
+    assert abs(C.probe_duration(clip_file) - 2.0) < 0.15
+    assert C.validate_clip(clip_file) > 0
+    with pytest.raises(ValueError):
+        C.validate_clip(str(clip_file) + ".missing")
     a = C.get_clip_frame(clip_file, 0.05)
     b = C.get_clip_frame(clip_file, 0.15)
     assert a.shape == (90, 160, 3) and not np.array_equal(a, b)
@@ -76,11 +80,12 @@ def test_upload_attach_delete_flow(tmp_path, monkeypatch, clip_file):
     c = _client(tmp_path, monkeypatch)
     root = c.application.config["DATA_DIR"]
     pid = projects.create(root, "Clip Film")["id"]
-    # reject non-video
+    # reject non-video (redirect carries a visible error)
     r = c.post(f"/studio/p/{pid}/clips/upload",
                data={"clip": (io.BytesIO(b"nope"), "x.txt")},
                content_type="multipart/form-data")
     assert r.status_code in (302, 303)
+    assert "err=" in r.headers["Location"]
     # accept video
     assert _upload(c, pid, clip_file).status_code in (302, 303)
     assert os.path.isfile(os.path.join(root, pid, "assets", "demo.mp4"))
@@ -101,3 +106,19 @@ def test_upload_attach_delete_flow(tmp_path, monkeypatch, clip_file):
     # delete clip
     c.post(f"/studio/p/{pid}/clips/delete", data={"name": "demo.mp4"})
     assert not os.path.exists(os.path.join(root, pid, "assets", "demo.mp4"))
+
+
+def test_oversize_upload_redirects_with_error(tmp_path, monkeypatch, clip_file):
+    c = _client(tmp_path, monkeypatch)
+    c.application.config["MAX_CONTENT_LENGTH"] = 10  # force 413
+    root = c.application.config["DATA_DIR"]
+    pid = projects.create(root, "Big Film")["id"]
+    with open(clip_file, "rb") as f:
+        data = f.read()
+    assert len(data) > 10
+    r = c.post(f"/studio/p/{pid}/clips/upload", data={
+        "clip": (io.BytesIO(data), "big.mp4")}, content_type="multipart/form-data")
+    assert r.status_code in (302, 303)
+    assert "err=" in r.headers["Location"]
+    page = c.get(f"/studio/p/{pid}?err=File+too+large").data
+    assert b"File too large" in page

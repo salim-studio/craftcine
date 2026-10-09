@@ -97,6 +97,22 @@ import atexit as _atexit
 _atexit.register(_close_clip_readers)
 
 
+def probe_duration(path: str) -> float:
+    """Fast video duration in seconds via ffmpeg headers (no decoding)."""
+    import re
+    import subprocess
+    try:
+        import imageio_ffmpeg
+        exe = imageio_ffmpeg.get_ffmpeg_exe()
+        p = subprocess.run([exe, "-i", path], capture_output=True, text=True, timeout=20)
+        m = re.search(r"Duration: (\d+):(\d+):([\d.]+)", p.stderr)
+        if m:
+            return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+    except Exception:
+        pass
+    return 0.0
+
+
 def clip_info(path: str) -> tuple[float, int, float]:
     """(fps, nframes, duration_sec) for a video file. Cached per file version."""
     import imageio.v2 as imageio
@@ -111,26 +127,61 @@ def clip_info(path: str) -> tuple[float, int, float]:
         meta = r.get_meta_data() or {}
         fps = float(meta.get("fps") or 25.0)
         dur = meta.get("duration")
-        n = meta.get("nframes")
-        if dur is None:
-            if n in (None, float("inf")):
-                try:
-                    n = r.count_frames()
-                except Exception:
-                    n = 0
-            n = int(n or 0) or int(fps * 5)
-            dur = n / fps
-        else:
-            dur = float(dur)
-            n = int(n) if isinstance(n, (int, float)) and n not in (float("inf"),) else max(1, int(dur * fps))
+        dur = float(dur) if dur else 0.0
     finally:
         try:
             r.close()
         except Exception:
             pass
+    if dur <= 0:
+        dur = probe_duration(path)  # fast header read, no decode
+    if dur <= 0:
+        # last resort: decode once to count (only tiny/odd files reach here)
+        r2 = imageio.get_reader(path)
+        try:
+            try:
+                n2 = r2.count_frames()
+            except Exception:
+                n2 = 0
+            dur = (int(n2 or 0) or int(fps * 5)) / fps
+        finally:
+            try:
+                r2.close()
+            except Exception:
+                pass
+    n = max(1, int(round(dur * fps)))
     info = (fps, n, dur)
     _CLIP_INFO[path] = (ver, info)
     return info
+
+
+def validate_clip(path: str) -> float:
+    """Quick upload check: returns duration if the file is a readable video.
+
+    Reads headers + a single frame only — safe for large files.
+    Raises ValueError otherwise.
+    """
+    import imageio.v2 as imageio
+    dur = probe_duration(path)
+    try:
+        r = imageio.get_reader(path)
+    except Exception as e:
+        raise ValueError(f"unreadable video: {e}")
+    try:
+        frame = r.get_data(0)
+        if frame is None or getattr(frame, "size", 0) == 0:
+            raise ValueError("empty video")
+    finally:
+        try:
+            r.close()
+        except Exception:
+            pass
+    if dur <= 0:
+        fps, _, _ = clip_info(path)
+        dur = fps and 1.0 or 0.0
+    if dur <= 0:
+        raise ValueError("unreadable video")
+    return dur
 
 
 def get_clip_frame(path: str, t: float):

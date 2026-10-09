@@ -7,7 +7,7 @@
 <p align="center"><b>Cut. Craft. Cinema.</b> — cinematic product videos rendered in pure Python.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.1.0-amber" alt="version">
+  <img src="https://img.shields.io/badge/version-2.1.1-amber" alt="version">
   <img src="https://img.shields.io/badge/python-%3E%3D3.9-blue" alt="python">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license">
   <img src="https://img.shields.io/badge/renderer-Pillow%20%2B%20ffmpeg-lightgrey" alt="renderer">
@@ -55,6 +55,7 @@ python -m craftcine studio --port 5198   # opens http://localhost:5198/studio
 - **Video import** — upload a clip in the studio (⬆️ Import video), attach it to
   any shot with the 🎞️ dropdown, and the motion plays over your footage
   (or in storyboard JSON: `"clip": "assets/demo.mp4"`, optional `"clip_offset"`).
+  Limits: 100 MB local / 25 MB hosted — bigger files need the local studio.
 
 ## Shots (30)
 

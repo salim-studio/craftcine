@@ -42,6 +42,16 @@ def create_app(data_dir: str | None = None) -> Flask:
     app.config["DATA_DIR"] = root
     app.config["MAX_CONTENT_LENGTH"] = (MAX_UPLOAD_MB + 10) * 1024 * 1024
 
+    @app.errorhandler(413)
+    def too_large(e):
+        import re as _re
+        m = _re.search(r"/studio/p/([^/]+)", request.path)
+        if m:
+            return redirect(url_for("project", pid=m.group(1),
+                                    err=f"File too large — limit here is {MAX_UPLOAD_MB} MB. "
+                                        "Use the local studio for bigger files."))
+        return "File too large", 413
+
     # ---------- public demo routes (also served on Vercel) ----------
     @app.get("/")
     def landing():
@@ -134,7 +144,7 @@ def create_app(data_dir: str | None = None) -> Flask:
         job = JOBS.latest_for(pid)
         return render_template("project.html", meta=meta, sb=sb, grouped=grouped,
                                themes=T.names(), job=job, clips=_clips(root, pid),
-                               copyright=COPYRIGHT)
+                               max_mb=MAX_UPLOAD_MB, copyright=COPYRIGHT)
 
     @app.post("/studio/p/<pid>/delete")
     def delete_project(pid: str):
@@ -200,7 +210,7 @@ def create_app(data_dir: str | None = None) -> Flask:
                                     err=f"File too large (max {MAX_UPLOAD_MB} MB)."))
         try:
             from . import compositor as C
-            C.clip_info(dest)
+            C.validate_clip(dest)
         except Exception:
             os.remove(dest)
             return redirect(url_for("project", pid=pid, err="Could not read that video."))
