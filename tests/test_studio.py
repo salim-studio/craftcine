@@ -133,7 +133,8 @@ def test_studio_flow(tmp_path, monkeypatch):
     assert c.get(f"/studio/p/{pid}/draft.json").status_code == 200
 
 
-def test_serverless_render_sync(tmp_path, monkeypatch):    monkeypatch.setenv("VERCEL", "1")
+def test_serverless_render_sync(tmp_path, monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
     from craftcine.server import create_app
     app = create_app(data_dir=str(tmp_path / "srv"))
     app.config["TESTING"] = True
