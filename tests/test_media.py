@@ -84,7 +84,10 @@ def test_upload_attach_delete_flow(tmp_path, monkeypatch, clip_file):
     # accept video
     assert _upload(c, pid, clip_file).status_code in (302, 303)
     assert os.path.isfile(os.path.join(root, pid, "assets", "demo.mp4"))
-    assert b"demo.mp4" in c.get(f"/studio/p/{pid}").data
+    page = c.get(f"/studio/p/{pid}").data
+    assert b"Import video" in page
+    assert b"clips/upload" in page
+    assert b"demo.mp4" in page
     # attach to shot 0, still preview works with the clip
     r = c.post(f"/studio/p/{pid}/shots/0/clip", data={"clip": "demo.mp4"})
     assert r.status_code in (302, 303)
