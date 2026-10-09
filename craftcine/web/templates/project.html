@@ -75,11 +75,12 @@
 
   <h3>Media — import a video to apply shots to it</h3>
   <div class="card">
-    <form class="inline" method="post" action="{{ url_for('upload_clip', pid=meta.id) }}"
-          enctype="multipart/form-data" onsubmit="return checkUpload(this)">
+    <form class="inline" id="upform" method="post" action="{{ url_for('upload_clip', pid=meta.id) }}"
+          data-chunk="{{ url_for('upload_chunk', pid=meta.id) }}"
+          enctype="multipart/form-data" onsubmit="return uploadVideo(this)">
       <input type="file" name="clip" accept="video/mp4,video/webm,video/quicktime" required>
       <button class="btn small" type="submit" id="upbtn">⬆️ Import video</button>
-      <span class="muted">max {{ max_mb }} MB here — bigger files need the local studio</span>
+      <span class="muted" id="upmsg">sent in small pieces — up to {{ max_mb }} MB here</span>
     </form>
     {% for c in clips %}
     <p class="inline"><span class="badge">🎞️ {{ c.name }} ({{ c.mb }} MB)</span>
@@ -128,17 +129,56 @@
 {% endblock %}
 {% block scripts %}
 <script>
-function checkUpload(form) {
+function newUid() {
+  try {
+    return [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) {
+    var s = '';
+    for (var i = 0; i < 16; i++) s += Math.floor(Math.random() * 16).toString(16);
+    return s;
+  }
+}
+async function uploadVideo(form) {
   var f = form.querySelector('input[type=file]').files[0];
   if (!f) return false;
-  var maxB = {{ max_mb }} * 1048576;
-  if (f.size > maxB) {
-    alert('This video is ' + (f.size / 1048576).toFixed(1) + ' MB — the limit here is {{ max_mb }} MB.\n\nRun the studio locally (python -m craftcine studio) for bigger files.');
-    return false;
+  var btn = document.getElementById('upbtn'), msg = document.getElementById('upmsg');
+  var url = form.dataset.chunk, CH = 3 * 1048576;
+  var total = Math.max(1, Math.ceil(f.size / CH));
+  btn.disabled = true;
+  var finished = false;
+  for (var attempt = 0; attempt < 2 && !finished; attempt++) {
+    var uid = newUid(), scattered = false;
+    for (var i = 0; i < total; i++) {
+      btn.textContent = '⏳ Uploading piece ' + (i + 1) + '/' + total + '…';
+      var fd = new FormData();
+      fd.append('upload_id', uid); fd.append('index', i); fd.append('total', total);
+      fd.append('filename', f.name);
+      fd.append('chunk', f.slice(i * CH, (i + 1) * CH), 'chunk');
+      var r, j;
+      try {
+        r = await fetch(url, {method: 'POST', body: fd});
+        j = await r.json();
+      } catch (e) {
+        alert('Upload failed (network): ' + (e.message || e));
+        btn.disabled = false; btn.textContent = '⬆️ Import video';
+        return false;
+      }
+      if (j && j.restart) { scattered = true; break; }
+      if (!r.ok || (j && j.error)) {
+        alert('Upload failed: ' + ((j && j.error) || ('HTTP ' + r.status)));
+        btn.disabled = false; btn.textContent = '⬆️ Import video';
+        return false;
+      }
+      if (j && j.done) { window.location.href = j.redirect; return false; }
+    }
+    if (!scattered) break;
+    msg.textContent = 'connection scattered — retrying…';
   }
-  var b = document.getElementById('upbtn');
-  b.disabled = true; b.textContent = '⏳ Uploading… do not close';
-  return true;
+  if (!finished) {
+    alert('Upload kept scattering across servers. Please retry, or run the local studio for big files.');
+    btn.disabled = false; btn.textContent = '⬆️ Import video';
+  }
+  return false;
 }
 function saveBoard() {
   fetch("{{ url_for('save_board', pid=meta.id) }}", {

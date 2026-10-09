@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import time
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, url_for
 
@@ -22,6 +23,7 @@ WEB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
 COPYRIGHT = "© 2026 salim-slimani · CraftCine"
 CLIP_EXTS = {".mp4", ".webm", ".mov", ".m4v"}
 MAX_UPLOAD_MB = 25 if os.environ.get("VERCEL") == "1" else 100
+CHUNK_BYTES = 3 * 1024 * 1024  # under the ~4.5MB serverless request cap
 
 
 def _clips(root: str, pid: str) -> list[dict]:
@@ -33,6 +35,50 @@ def _clips(root: str, pid: str) -> list[dict]:
             if os.path.isfile(p):
                 out.append({"name": fn, "mb": round(os.path.getsize(p) / 1048576, 2)})
     return out
+
+
+def _finalize_upload(root: str, pid: str, d: str, uid: str, fn: str):
+    """Assemble chunks -> validate -> move into assets. Returns JSON response."""
+    from flask import jsonify as _jsonify
+    from flask import url_for as _url_for
+    from . import compositor as C
+    part, side = os.path.join(d, uid + ".part"), os.path.join(d, uid + ".json")
+
+    def _fail(msg: str, code: int = 400):
+        for p in (part, side):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
+        return _jsonify({"error": msg}), code
+
+    if not os.path.exists(part):
+        return _fail("Upload incomplete — please retry.")
+    if os.path.getsize(part) > MAX_UPLOAD_MB * 1048576:
+        return _fail(f"File too large (max {MAX_UPLOAD_MB} MB here).", 413)
+    adir = os.path.join(root, pid, "assets")
+    os.makedirs(adir, exist_ok=True)
+    dest = os.path.join(adir, fn)
+    try:
+        if os.path.exists(dest):
+            os.remove(dest)
+        os.replace(part, dest)
+        C.validate_clip(dest)
+    except Exception:
+        try:
+            os.remove(dest)
+        except OSError:
+            pass
+        try:
+            os.remove(side)
+        except OSError:
+            pass
+        return _fail("Could not read that video.")
+    try:
+        os.remove(side)
+    except OSError:
+        pass
+    return _jsonify({"done": True, "redirect": _url_for("project", pid=pid)})
 
 
 def create_app(data_dir: str | None = None) -> Flask:
@@ -188,8 +234,85 @@ def create_app(data_dir: str | None = None) -> Flask:
             _drop_stills(root, pid)
         return redirect(url_for("project", pid=pid))
 
+    @app.post("/studio/p/<pid>/clips/chunk")
+    def upload_chunk(pid: str):
+        """Resumable-style upload in small pieces (survives serverless body caps).
+
+        Fields: upload_id (hex), index, total, filename + file field `chunk`.
+        Chunks must arrive in order; the last one finalizes the file.
+        """
+        import re as _re
+        _get(pid)
+        uid = _re.sub(r"[^a-f0-9]", "", (request.form.get("upload_id") or "").lower())[:32]
+        try:
+            index = int(request.form.get("index", -1))
+            total = int(request.form.get("total", 0))
+        except (TypeError, ValueError):
+            return jsonify({"error": "bad chunk"}), 400
+        from werkzeug.utils import secure_filename
+        fn = secure_filename(os.path.basename(request.form.get("filename", "")))
+        ext = os.path.splitext(fn)[1].lower()
+        if not uid or total <= 0 or index < 0 or index >= total or not fn:
+            return jsonify({"error": "bad chunk"}), 400
+        if ext not in CLIP_EXTS:
+            return jsonify({"error": f"Only video files ({', '.join(sorted(CLIP_EXTS))})."}), 400
+        d = os.path.join(root, pid, ".uploads")
+        os.makedirs(d, exist_ok=True)
+        now = time.time()
+        for stale in os.listdir(d):  # GC partials older than 2h
+            p = os.path.join(d, stale)
+            try:
+                if now - os.path.getmtime(p) > 7200:
+                    os.remove(p)
+            except OSError:
+                pass
+        side = os.path.join(d, uid + ".json")
+        part = os.path.join(d, uid + ".part")
+        f = request.files.get("chunk")
+        if f is None:
+            return jsonify({"error": "missing chunk"}), 400
+        if index == 0:
+            for p in (side, part):
+                try:
+                    os.remove(p)
+                except OSError:
+                    pass
+            state = {"filename": fn, "total": total, "next": 0}
+        else:
+            if not os.path.exists(side):
+                return jsonify({"error": "scattered", "restart": True,
+                                "detail": "Upload scattered across servers — restarting."}), 409
+            try:
+                with open(side, encoding="utf-8") as fh:
+                    state = json.load(fh)
+            except (OSError, ValueError):
+                return jsonify({"error": "scattered", "restart": True}), 409
+            if state.get("filename") != fn or state.get("total") != total \
+                    or state.get("next") != index:
+                return jsonify({"error": "scattered", "restart": True}), 409
+        data = f.read()
+        if len(data) > CHUNK_BYTES + 65536:
+            return jsonify({"error": "chunk too big"}), 400
+        have = os.path.getsize(part) if os.path.exists(part) else 0
+        if have + len(data) > (MAX_UPLOAD_MB + 10) * 1048576:
+            for p in (side, part):
+                try:
+                    os.remove(p)
+                except OSError:
+                    pass
+            return jsonify({"error": f"File too large (max {MAX_UPLOAD_MB} MB here)."}), 413
+        with open(part, "ab") as fh:
+            fh.write(data)
+        state["next"] = index + 1
+        with open(side, "w", encoding="utf-8") as fh:
+            json.dump(state, fh)
+        if index == total - 1:
+            return _finalize_upload(root, pid, d, uid, fn)
+        return jsonify({"received": index, "next": index + 1})
+
     @app.post("/studio/p/<pid>/clips/upload")
     def upload_clip(pid: str):
+        """Single-request upload (handy locally; hosted traffic should use /chunk)."""
         _get(pid)
         f = request.files.get("clip")
         if not f or not f.filename:

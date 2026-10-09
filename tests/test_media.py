@@ -122,3 +122,46 @@ def test_oversize_upload_redirects_with_error(tmp_path, monkeypatch, clip_file):
     assert "err=" in r.headers["Location"]
     page = c.get(f"/studio/p/{pid}?err=File+too+large").data
     assert b"File too large" in page
+
+
+def test_chunked_upload_flow(tmp_path, monkeypatch, clip_file):
+    import math
+    import craftcine.server as SV
+    monkeypatch.setattr(SV, "CHUNK_BYTES", 1024)
+    c = _client(tmp_path, monkeypatch)
+    root = c.application.config["DATA_DIR"]
+    pid = projects.create(root, "Chunk Film")["id"]
+    with open(clip_file, "rb") as f:
+        data = f.read()
+    total = math.ceil(len(data) / 1024)
+    assert total >= 3
+    uid = "ab" * 16
+    messy = "2.8M views Best ng Zone.mp4"
+    last = None
+    for i in range(total):
+        piece = data[i * 1024:(i + 1) * 1024]
+        last = c.post(f"/studio/p/{pid}/clips/chunk", data={
+            "upload_id": uid, "index": str(i), "total": str(total),
+            "filename": messy,
+            "chunk": (io.BytesIO(piece), "chunk")},
+            content_type="multipart/form-data")
+        assert last.status_code == 200, last.get_json()
+    assert last.get_json()["done"] is True
+    landed = os.listdir(os.path.join(root, pid, "assets"))
+    assert len(landed) == 1 and landed[0].endswith(".mp4") and " " not in landed[0]
+    # scattered mid-stream chunk asks for a restart, not a crash
+    r = c.post(f"/studio/p/{pid}/clips/chunk", data={
+        "upload_id": "cd" * 16, "index": "1", "total": "3",
+        "filename": "x.mp4", "chunk": (io.BytesIO(b"0"), "chunk")},
+        content_type="multipart/form-data")
+    assert r.status_code == 409
+    assert r.get_json()["restart"] is True
+    # oversize assembly is rejected with JSON, not a platform dead-end
+    monkeypatch.setattr(SV, "MAX_UPLOAD_MB", 0)
+    uid2 = "ef" * 16
+    r = c.post(f"/studio/p/{pid}/clips/chunk", data={
+        "upload_id": uid2, "index": "0", "total": "1",
+        "filename": "big.mp4", "chunk": (io.BytesIO(data), "chunk")},
+        content_type="multipart/form-data")
+    assert r.status_code == 413
+    assert "max 0 MB" in r.get_json()["error"]
