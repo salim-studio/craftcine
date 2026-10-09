@@ -165,3 +165,13 @@ def test_chunked_upload_flow(tmp_path, monkeypatch, clip_file):
         content_type="multipart/form-data")
     assert r.status_code == 413
     assert "max 0 MB" in r.get_json()["error"]
+
+
+def test_chunk_on_missing_project_returns_restart_json(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    r = c.post("/studio/p/gone-after-redeploy/clips/chunk", data={
+        "upload_id": "aa" * 16, "index": "0", "total": "2",
+        "filename": "x.mp4", "chunk": (io.BytesIO(b"0"), "chunk")},
+        content_type="multipart/form-data")
+    assert r.status_code == 409
+    assert r.get_json()["restart"] is True

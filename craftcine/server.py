@@ -275,7 +275,13 @@ def create_app(data_dir: str | None = None) -> Flask:
         Chunks must arrive in order; the last one finalizes the file.
         """
         import re as _re
-        _get(pid)
+        try:
+            _get(pid)
+        except _ProjectGone:
+            # Chunk landed on a fresh instance whose temporary storage lacks
+            # this project: tell the client to restart, not redirect to HTML.
+            return jsonify({"error": "scattered", "restart": True,
+                            "detail": "Project is not on this server instance."}), 409
         uid = _re.sub(r"[^a-f0-9]", "", (request.form.get("upload_id") or "").lower())[:32]
         try:
             index = int(request.form.get("index", -1))

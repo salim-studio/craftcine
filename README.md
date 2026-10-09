@@ -7,7 +7,7 @@
 <p align="center"><b>Cut. Craft. Cinema.</b> — cinematic product videos rendered in pure Python.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.1.2-amber" alt="version">
+  <img src="https://img.shields.io/badge/version-2.1.3-amber" alt="version">
   <img src="https://img.shields.io/badge/python-%3E%3D3.9-blue" alt="python">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license">
   <img src="https://img.shields.io/badge/renderer-Pillow%20%2B%20ffmpeg-lightgrey" alt="renderer">
