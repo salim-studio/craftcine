@@ -131,13 +131,21 @@ def test_studio_flow(tmp_path, monkeypatch):
     assert c.get(f"/studio/p/{pid}/draft.json").status_code == 200
 
 
-def test_serverless_render_blocked(tmp_path, monkeypatch):
+def test_serverless_render_sync(tmp_path, monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
     from craftcine.server import create_app
     app = create_app(data_dir=str(tmp_path / "srv"))
     app.config["TESTING"] = True
     c = app.test_client()
     pid = projects.create(str(tmp_path / "srv"), "Srv")["id"]
+    _, sb = projects.load(str(tmp_path / "srv"), pid)
+    sb.update({"width": 160, "height": 90, "fps": 10})
+    sb["shots"] = sb["shots"][:2]
+    for s in sb["shots"]:
+        s["duration"] = 0.5
+    projects.save(str(tmp_path / "srv"), pid, sb)
+    # hosted render runs synchronously and hands back the file (or project page w/ note)
     r = c.post(f"/studio/p/{pid}/render", data={})
-    assert r.status_code == 503
+    assert r.status_code in (302, 303)
+    assert c.get(f"/studio/p/{pid}/download").status_code == 200
     assert c.get("/api/render-demo").status_code == 200

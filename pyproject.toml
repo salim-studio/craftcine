@@ -1,6 +1,6 @@
 [project]
 name = "craftcine"
-version = "2.0.0"
+version = "2.0.1"
 description = "CraftCine — cinematic product videos in pure Python (Cut. Craft. Cinema.)"
 readme = "README.md"
 requires-python = ">=3.10"

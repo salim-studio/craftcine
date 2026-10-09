@@ -173,12 +173,24 @@ def create_app(data_dir: str | None = None) -> Flask:
 
     @app.post("/studio/p/<pid>/render")
     def start_render(pid: str):
-        if JOBS.is_serverless():
-            return jsonify({"error": "Full renders are disabled on the hosted demo. "
-                                     "Run the studio locally, or try /api/render-demo."}), 503
         meta, sb = _get(pid)
         pdir = os.path.join(root, pid)
         out = os.path.join(pdir, "out", "promo.mp4")
+        if JOBS.is_serverless():
+            # No background execution on serverless: render synchronously in a
+            # capped preview profile (640x360@15fps, max 90s) and hand back the file.
+            try:
+                info = R.render_stream(sb, out, 640, 360, 15, assets_dir=pdir)
+                base = os.path.dirname(os.path.abspath(out))
+                with open(os.path.join(base, "promo.srt"), "w", encoding="utf-8") as f:
+                    f.write(SUBS.to_srt(sb))
+                ST.export_edit_draft_to(sb, os.path.join(base, "edit_draft.json"))
+                if info["capped"]:
+                    return redirect(url_for("project", pid=pid,
+                                            err="Hosted renders are capped at 90s — run locally for the full film."))
+                return redirect(url_for("download", pid=pid))
+            except Exception as e:
+                return redirect(url_for("project", pid=pid, err=f"Hosted render failed: {e}"))
         job = JOBS.start(pid, sb, out, os.path.join(pdir, ".cache"),
                          assets_dir=pdir, jobs=0,
                          preview=request.form.get("preview") == "1")

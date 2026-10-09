@@ -90,6 +90,33 @@ def _write_mp4(frames: list, out_mp4: str, fps: int) -> None:
     w.close()
 
 
+def render_stream(sb: dict, out_mp4: str, W: int, H: int, fps: int,
+                  assets_dir: str = "", max_sec: float = 90.0) -> dict:
+    """Low-memory sequential render for constrained hosts (serverless).
+
+    Frames are appended to ffmpeg one by one (O(1) memory, no subprocess
+    pool). Returns {"output": path, "frames": n, "capped": bool}.
+    """
+    import imageio.v2 as imageio
+    tasks = _tasks(sb, W, H, fps, assets_dir)
+    cap = int(max_sec * fps)
+    capped = len(tasks) > cap
+    tasks = tasks[:cap]
+    os.makedirs(os.path.dirname(os.path.abspath(out_mp4)), exist_ok=True)
+    w = imageio.get_writer(out_mp4, fps=fps, codec="libx264", quality=8, macro_block_size=1,
+                           ffmpeg_params=["-pix_fmt", "yuv420p", "-preset", "veryfast"])
+    try:
+        for a in tasks:
+            _, arr = _render_one(a)
+            w.append_data(arr)
+    finally:
+        w.close()
+    bgm = sb.get("bgm")
+    if bgm and os.path.exists(str(bgm)):
+        _mux_audio(out_mp4, str(bgm))
+    return {"output": out_mp4, "frames": len(tasks), "capped": capped}
+
+
 def render(sb: dict, out_mp4: str, preview: bool = False, jobs: int = 0,
            progress: bool = True, assets_dir: str = "") -> str:
     W, H, fps = sb["width"], sb["height"], sb["fps"]

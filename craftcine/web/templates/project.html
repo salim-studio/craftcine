@@ -4,6 +4,7 @@
 <section class="wrap">
   <p><a href="{{ url_for('dashboard') }}">← Projects</a></p>
   <h2>{{ meta.title }}</h2>
+  {% if request.args.get('err') %}<p class="err">{{ request.args.get('err') }}</p>{% endif %}
   <p class="muted">{{ sb.shots|length }} shots · {{ "%.1f"|format(meta.total_sec) }}s · {{ sb.width }}×{{ sb.height }}@{{ sb.fps }}</p>
 
   <div class="toolbar card">

@@ -7,7 +7,7 @@
 <p align="center"><b>Cut. Craft. Cinema.</b> — cinematic product videos rendered in pure Python.</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.0-amber" alt="version">
+  <img src="https://img.shields.io/badge/version-2.0.1-amber" alt="version">
   <img src="https://img.shields.io/badge/python-%3E%3D3.9-blue" alt="python">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="license">
   <img src="https://img.shields.io/badge/renderer-Pillow%20%2B%20ffmpeg-lightgrey" alt="renderer">
@@ -105,8 +105,9 @@ vercel --prod
 Live routes: `/` · `/gallery` · `/api/shots` · `/api/themes` ·
 `/api/storyboard` · `/api/render-demo`
 
-> Serverless functions have hard time limits, so the hosted demo stays small.
-> Render full-length films locally with `python -m craftcine render`.
+> The hosted studio renders synchronously in a capped preview profile
+> (640×360@15fps, max 90s) to fit serverless limits. For full-quality
+> 720p/1080p films, run the studio locally with `python -m craftcine studio`.
 
 ## Layout
 
