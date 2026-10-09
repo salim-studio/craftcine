@@ -80,6 +80,21 @@ unseeded randomness anywhere in the frame path.
 python -m pytest tests/ -q
 ```
 
+## Deploy on Vercel
+
+The repo ships a serverless entrypoint (`api/index.py`): landing page, shot
+library API, HTML gallery, and a ~5s demo render.
+
+```bash
+vercel --prod
+```
+
+Live routes: `/` · `/gallery` · `/api/shots` · `/api/themes` ·
+`/api/storyboard` · `/api/render-demo`
+
+> Serverless functions have hard time limits, so the hosted demo stays small.
+> Render full-length films locally with `python -m craftcine render`.
+
 ## Layout
 
 ```
